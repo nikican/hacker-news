@@ -1,31 +1,66 @@
 module Main exposing (main)
 
 import Html exposing (Html, h1, text)
+import Navigation exposing (Location)
+import UrlParser exposing (parsePath)
+import Route exposing (..)
 
 
 type Msg
-    = NoOp
+    = SetRoute Location
+
+
+type Page
+    = Home
+    | Newest
 
 
 type alias Model =
-    {}
+    { page : Page }
 
 
 main : Program Never Model Msg
 main =
-    Html.program
-        { init = ( {}, Cmd.none )
+    Navigation.program SetRoute
+        { init = init
         , update = update
         , view = view
         , subscriptions = (\_ -> Sub.none)
         }
 
 
+init : Location -> ( Model, Cmd Msg )
+init location =
+    ( setRoute location { page = Home }, Cmd.none )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        SetRoute location ->
+            (setRoute location model) ! []
+
+
+setRoute : Location -> Model -> Model
+setRoute location model =
+    let
+        route =
+            UrlParser.parsePath Route.route location
+                |> Maybe.withDefault Route.Home
+    in
+        case route of
+            Route.Home ->
+                { model | page = Home }
+
+            Route.Newest ->
+                { model | page = Newest }
 
 
 view : Model -> Html Msg
 view model =
-    h1 [] [ text "Technologist news" ]
+    case model.page of
+        Home ->
+            h1 [] [ text "Technologist news" ]
+
+        Newest ->
+            h1 [] [ text "Newest" ]
